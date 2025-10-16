@@ -12,3 +12,8 @@ Route::prefix('auth')->group(function () {
         Route::post('logout', [\App\Http\Controllers\AuthController::class, 'logout']);
     });
 });
+
+Route::middleware('jwt.auth')->group(function() {
+    Route::apiResource('products', \App\Http\Controllers\ProductController::class);
+    Route::apiResource('customers', \App\Http\Controllers\CustomerController::class);
+});
