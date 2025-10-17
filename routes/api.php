@@ -38,4 +38,12 @@ Route::middleware('jwt.auth')->group(function() {
         Route::post('{order}/apply-discount', [\App\Http\Controllers\OrderController::class, 'applyDiscount']);
         Route::delete('{order}/remove-discounts', [\App\Http\Controllers\OrderController::class, 'removeDiscounts']);
     });
+
+    Route::prefix('inventory')->group(function () {
+        // Stock on hand
+        Route::get('stock', [\App\Http\Controllers\InventoryReportController::class, 'stock']);
+        Route::get('stock/{product}', [\App\Http\Controllers\InventoryReportController::class, 'stockOf']);
+
+        Route::get('movements', [\App\Http\Controllers\InventoryReportController::class, 'movements']);
+    });
 });
