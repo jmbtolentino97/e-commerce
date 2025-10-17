@@ -115,10 +115,13 @@ class OrderController extends Controller
         $taxRate = isset($payload['tax_rate']) ? (float) $payload['tax_rate'] : 0;
         $tax = round(($unit * $qty - $disc) * $taxRate, 2);
 
-        $item->update(array_merge($payload, [
+        $item->update([
+            'quantity' => $payload['quantity'],
+            'unit_price' => $payload['unit_price'],
+            'discount_amount' => $payload['discount_amount'],
             'tax_amount' => $tax,
             'total' => round(($unit * $qty) - $disc + $tax, 2),
-        ]));
+        ]);
 
         $totals->recompute($order);
 
