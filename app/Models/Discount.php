@@ -40,4 +40,20 @@ class Discount extends Model
                 $q->whereNull('ends_at')->orWhere('ends_at', '>=', $now);
             });
     }
+
+    public function scopeInDateRange($query, $value)
+    {
+        // value: "YYYY-MM-DD,YYYY-MM-DD"
+        [$start, $end] = array_pad(explode(',', (string) $value, 2), 2, null);
+        if ($start) {
+            $query->where(function ($q) use ($start) {
+                $q->whereNull('starts_at')->orWhere('starts_at', '<=', $start . ' 23:59:59');
+            });
+        }
+        if ($end) {
+            $query->where(function ($q) use ($end) {
+                $q->whereNull('ends_at')->orWhere('ends_at', '>=', $end . ' 00:00:00');
+            });
+        }
+    }
 }

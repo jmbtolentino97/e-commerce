@@ -12,6 +12,7 @@ use App\Models\InventoryMovement;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Product;
+use App\Services\DiscountApplicationService;
 use App\Services\Order\OrderTotalsService;
 use App\Services\Order\StockReservationService;
 use Illuminate\Http\Request;
@@ -140,7 +141,7 @@ class OrderController extends Controller
         return response()->json(['message' => 'Item removed.']);
     }
 
-    public function applyDiscount(Order $order, ApplyDiscountRequest $request, OrderTotalsService $totals)
+    public function applyDiscount(Order $order, ApplyDiscountRequest $request, OrderTotalsService $totals, DiscountApplicationService $service)
     {
         $this->ensureDraft($order);
 
@@ -161,11 +162,14 @@ class OrderController extends Controller
             if (! $item) {
                 return response()->json(['message' => 'Order item not found for this order.'], 422);
             }
+
+            $service->ensureCanApply($discount, $order, $item);
+
             $amount = $this->computeDiscountAmount($discount, $item->unit_price * $item->quantity);
             DiscountApplication::create([
                 'discount_id' => $discount->id,
                 'order_item_id' => $item->id,
-                'amount' => $amount,
+                'amount' => $this->capAmount($amount, $discount),
             ]);
 
             // reflect on line snapshot immediately (optional)
@@ -174,13 +178,16 @@ class OrderController extends Controller
                 'total' => round(($item->unit_price * $item->quantity) - ($item->discount_amount + $amount) + $item->tax_amount, 2),
             ]);
         } else {
+            $service->ensureCanApply($discount, $order);
+
             // order scope
             $amount = $this->computeDiscountAmount($discount, (float) $order->subtotal + (float) $order->shipping_total);
             DiscountApplication::create([
                 'discount_id' => $discount->id,
                 'order_id' => $order->id,
-                'amount' => $amount,
+                'amount' => $this->capAmount($amount, $discount),
             ]);
+
             if ($discount->type === 'free_shipping') {
                 $order->update(['shipping_total' => 0.00]);
             }
@@ -289,5 +296,14 @@ class OrderController extends Controller
             'free_shipping' => 0.00,
             default => 0.00,
         };
+    }
+
+    protected function capAmount(float $amount, Discount $discount): float
+    {
+        if ($discount->max_discount_amount !== null) {
+            return (float) min($amount, (float) $discount->max_discount_amount);
+        }
+
+        return $amount;
     }
 }
