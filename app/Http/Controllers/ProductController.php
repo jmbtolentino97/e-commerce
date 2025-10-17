@@ -26,6 +26,7 @@ class ProductController extends Controller
                 AllowedFilter::operator('max_price', FilterOperator::LESS_THAN_OR_EQUAL, 'and', 'price')
             ])
             ->allowedSorts(['name', 'price', 'created_at'])
+            ->defaultSort('name')
             ->allowedIncludes(['inventoryMovements'])
             ->paginate($request->query('page_size', 15));
 
