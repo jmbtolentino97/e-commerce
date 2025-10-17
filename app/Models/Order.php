@@ -20,9 +20,14 @@ class Order extends Model
         'total' => 'decimal:2',
     ];
 
-    public function order(): BelongsTo
+    public function customer(): BelongsTo
     {
-        return $this->belongsTo(Order::class);
+        return $this->belongsTo(Customer::class);
+    }
+
+    public function items(): HasMany
+    {
+        return $this->hasMany(OrderItem::class);
     }
 
     public function product(): BelongsTo

@@ -16,4 +16,25 @@ Route::prefix('auth')->group(function () {
 Route::middleware('jwt.auth')->group(function() {
     Route::apiResource('products', \App\Http\Controllers\ProductController::class);
     Route::apiResource('customers', \App\Http\Controllers\CustomerController::class);
+
+    Route::prefix('orders')->group(function () {
+        Route::get('', [\App\Http\Controllers\OrderController::class, 'index']);
+        Route::get('{order}', [\App\Http\Controllers\OrderController::class, 'show']);
+
+        // draft lifecycle
+        Route::post('', [\App\Http\Controllers\OrderController::class, 'store']); // create draft
+        Route::post('{order}/place', [\App\Http\Controllers\OrderController::class, 'place']);
+        Route::post('{order}/pay', [\App\Http\Controllers\OrderController::class, 'pay']);
+        Route::post('{order}/fulfill', [\App\Http\Controllers\OrderController::class, 'fulfill']);
+        Route::post('{order}/cancel', [\App\Http\Controllers\OrderController::class, 'cancel']);
+
+        // items
+        Route::post('{order}/items', [\App\Http\Controllers\OrderController::class, 'addItem']);
+        Route::put('{order}/items/{item}', [\App\Http\Controllers\OrderController::class, 'updateItem']);
+        Route::delete('{order}/items/{item}', [\App\Http\Controllers\OrderController::class, 'removeItem']);
+
+        // discounts
+        Route::post('{order}/apply-discount', [\App\Http\Controllers\OrderController::class, 'applyDiscount']);
+        Route::delete('{order}/remove-discounts', [\App\Http\Controllers\OrderController::class, 'removeDiscounts']);
+    });
 });
